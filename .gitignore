@@ -1,0 +1,11 @@
+### Dev C++ ###
+
+## Ignore Dev C++ layout file
+*.layout
+
+## Ignore output files
+*.o
+*.exe
+
+## Ignore makefiles
+Makefile.win
