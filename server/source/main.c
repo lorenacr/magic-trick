@@ -4,7 +4,7 @@
 
 
 int main(void){
-	int err,iResult,iSendResult;
+	int iResult,iSendResult;
    	
     WSADATA wsadata;
 	SOCKET client_skt=INVALID_SOCKET; 
@@ -17,8 +17,8 @@ int main(void){
 
        
    //inicia dll de conexao com a net
-    err=WSAStartup(MAKEWORD(2,0),&wsadata);
-    if(err!=0){
+    iResult=WSAStartup(MAKEWORD(2,0),&wsadata);
+    if(iResult!=0){
     	printf("WSAStartup falhou.\n");
 		return 1;
 	}
@@ -31,46 +31,59 @@ int main(void){
    hints.ai_flags=AI_PASSIVE;
       
    //server address and port
-   if(getaddrinfo(NULL,"27015", &hints, &result)!=0){
-   	printf("getaddrinfo falhou.\n");
-   	WSACleanup();
+   iResult=getaddrinfo(NULL,"80", &hints, &result);
+   if(iResult!=0){
+   	printf("getaddrinfo falhou com erro: %d.\n",WSAGetLastError());
+	WSACleanup();
    	return 1;
    }
    
    // cria socket pra conectar no servidor
     listen_skt=socket(result->ai_family, result->ai_socktype, result->ai_protocol);
     if (listen_skt==INVALID_SOCKET) {
-        printf("socket falhou com erro: %ld\n", WSAGetLastError());
+        printf("socket falhou com erro: %d\n", WSAGetLastError());
         freeaddrinfo(result);
         WSACleanup();
         return 1;
 	}
+   else
+   		printf("socket criado com sucesso.\n");
    
-   if(bind(listen_skt,result->ai_addr,result->ai_addrlen)==SOCKET_ERROR){
-   		printf("bind falhou. Codigo do erro: %ld \n",WSAGetLastError());
+   //seta um socket tcp que fica escutando
+   iResult=bind(listen_skt,result->ai_addr,result->ai_addrlen);
+   if(iResult==SOCKET_ERROR){
+   		printf("bind falhou. Codigo do erro: %d \n",WSAGetLastError());
    		freeaddrinfo(result);
    		closesocket(listen_skt);
    		WSACleanup();
    		return 1;
    }
+   	printf("bind realizado com sucesso.\n");
+   	freeaddrinfo(result);
    
-   if(listen(listen_skt,10)==SOCKET_ERROR){
-   		printf("listen falhou. Codigo do erro: %ld \n",WSAGetLastError());
+   //fica aberto a novas conexoes
+   iResult=listen(listen_skt,10);
+   if(iResult==SOCKET_ERROR){
+   		printf("listen falhou. Codigo do erro: %d \n",WSAGetLastError());
    		closesocket(listen_skt);
    		WSACleanup();
    		return 1;
    }
+   printf("listen realizado com sucesso.\n");
    
+   //aceita conexao de um socket cliente
    client_skt=accept(listen_skt,NULL,NULL);
    if(client_skt==INVALID_SOCKET){
-   		printf("accept falhou. Codigo do erro: %ld \n",WSAGetLastError());
+   		printf("accept falhou. Codigo do erro: %d \n",WSAGetLastError());
    		closesocket(listen_skt);
    		WSACleanup();
    		return 1;	
    }
+   
    //nao precisa mais do server socket
    closesocket(listen_skt);
-   
+    
+	//recebe ate que a conexao seja fechada
    do {
         iResult=recv(client_skt,rcvmsg,sizeof(rcvmsg),0);
         if (iResult>0) {
@@ -110,7 +123,5 @@ int main(void){
     closesocket(client_skt);
     WSACleanup();
 
-    return 0;
+return 0;
 }
-
-	
