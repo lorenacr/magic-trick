@@ -6,7 +6,7 @@ int __cdecl main (int argc, char **argv)
 {
    	int functionResult;
    	
-   	WSADATA wsadata;
+    WSADATA wsadata;
 	SOCKET con_skt = INVALID_SOCKET; 
 	
 	struct addrinfo *result = NULL;
@@ -24,8 +24,8 @@ int __cdecl main (int argc, char **argv)
 	}
     
 	// inicia dll de conexao com a net
-    	functionResult = WSAStartup (MAKEWORD (2,0), &wsadata);
-    	if (functionResult != 0)
+    functionResult = WSAStartup (MAKEWORD (2,0), &wsadata);
+    if (functionResult != 0)
 	{
     	printf ("WSAStartup falhou.\n");
 		return 1;
