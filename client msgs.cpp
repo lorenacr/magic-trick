@@ -12,7 +12,7 @@ int __cdecl main(int argc, char **argv){
 	struct addrinfo	*ptr=NULL;
 	struct addrinfo	hints;
 	
-	char *sendmsg="msg";
+	char sendmsg[300];
 	char rcvmsg[300]; 
 	
 //Validacao de parametros
@@ -57,8 +57,8 @@ int __cdecl main(int argc, char **argv){
 	
 		//conecta ao servidor
 		if(connect(con_skt,ptr->ai_addr,(int)ptr->ai_addrlen)==SOCKET_ERROR){
-			printf("%s",ptr->ai_addr->sa_data);
-			printf("%s",ptr->ai_addr->sa_family);
+			printf("%d\n",ptr->ai_addr->sa_data);
+			printf("%d\n",ptr->ai_addr->sa_family);
 			printf("nao foi possivel conectar. Erro: %d \n",WSAGetLastError());
 			closesocket(con_skt);
 			WSACleanup();
@@ -69,6 +69,7 @@ int __cdecl main(int argc, char **argv){
 	
 	//freeaddrinfo(result); //limpa o addrinfo
 	
+	/*
 	//envia mensagem
 	iResult=send(con_skt,sendmsg,strlen(sendmsg),0);
 	if(iResult==SOCKET_ERROR){
@@ -87,8 +88,9 @@ int __cdecl main(int argc, char **argv){
 		return 1;	
 	}
 	
+
 	//continua recebendo ate que a conexao seja fechada
-	do{	
+	do{		
 		iResult=recv(con_skt,rcvmsg,strlen(rcvmsg),0);
 		if(iResult>0)
 			printf("Recebido: %d bytes.\n",iResult);
@@ -97,8 +99,34 @@ int __cdecl main(int argc, char **argv){
 		else
 			printf("Falha no recebimento. Erro: %d\n", WSAGetLastError());
 	}while(iResult>0);
+	*/
 	
-	
+	while(1){
+		printf("Voce: ");
+		fgets(sendmsg,300,stdin);
+		if(strlen(sendmsg)>300){
+			printf("Digite uma mensagem com menos de 300 caracteres.\n");
+			continue;
+		}
+		
+		iResult=send(con_skt,sendmsg,strlen(sendmsg),0);
+		if(iResult==SOCKET_ERROR){
+			printf("Falha no envio. Codigo do erro: %d \n",WSAGetLastError());
+			closesocket(con_skt);
+			WSACleanup();
+			return 0;
+		}
+		
+		iResult=recv(con_skt,rcvmsg,sizeof(rcvmsg),0);
+		if(iResult>0)
+			printf("Amigo: %s",rcvmsg);
+		else if(iResult==0)
+			printf("Fim da conexao.\n");
+		else{
+			printf("Falha no recebimento. Erro: %d\n", WSAGetLastError());
+			return 0;
+		}
+	}
 	closesocket(con_skt);
 	WSACleanup();
 	

@@ -14,7 +14,7 @@ int main(void){
 	struct addrinfo	hints;
 	
 	char rcvmsg[300]; 
-
+	char sendmsg[300];
        
    //inicia dll de conexao com a net
     iResult=WSAStartup(MAKEWORD(2,0),&wsadata);
@@ -31,7 +31,7 @@ int main(void){
    hints.ai_flags=AI_PASSIVE;
       
    //server address and port
-   iResult=getaddrinfo(NULL,"80", &hints, &result);
+   iResult=getaddrinfo("127.0.0.1","27015", &hints, &result);
    if(iResult!=0){
    	printf("getaddrinfo falhou com erro: %d.\n",WSAGetLastError());
 	WSACleanup();
@@ -83,6 +83,7 @@ int main(void){
    //nao precisa mais do server socket
    closesocket(listen_skt);
     
+    /*
 	//recebe ate que a conexao seja fechada
    do {
         iResult=recv(client_skt,rcvmsg,sizeof(rcvmsg),0);
@@ -109,14 +110,46 @@ int main(void){
         }
 
     } while (iResult > 0);
+	*/
+	
+	while(1){
+		//recebe mensagem primeiro
+	 	iResult=recv(client_skt,rcvmsg,sizeof(rcvmsg),0);
+        if (iResult>0) 
+        	printf("Amigo: %s",rcvmsg);
+        else if(iResult==0)
+			printf("Fim da conexao.\n");
+		else {
+			printf("Falha no recebimento. Erro: %d\n", WSAGetLastError());
+			closesocket(client_skt);
+            WSACleanup();
+			return 0;
+		}
+            
+	   //envia mensagem
+        printf("Voce: ");
+        fgets(sendmsg,300,stdin);
+		if(strlen(sendmsg)>300){
+        	printf("Digite uma mensagem com menos de 300 caracteres.\n");
+        	continue;
+       	}
 
+		iResult=send(client_skt,sendmsg,strlen(sendmsg),0);
+		if(iResult==SOCKET_ERROR){
+			printf("Falha no envio. Codigo do erro: %d \n",WSAGetLastError());
+			closesocket(client_skt);
+			WSACleanup();
+			return 0;
+		}	
+	}
+			
     //shutdown no envio de mensagens
     iResult = shutdown(client_skt, SD_SEND);
     if (iResult == SOCKET_ERROR) {
         printf("shutdown falhou com erro: %d\n", WSAGetLastError());
         closesocket(client_skt);
         WSACleanup();
-        return 1;
+        return 0;
     }
 
     //limpeza
@@ -125,3 +158,5 @@ int main(void){
 
 return 0;
 }
+
+	
